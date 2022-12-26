@@ -1,0 +1,98 @@
+# Salt Function Flow
+
+The Salt Function Flow is a lightweight flow orchestration component at the memory level, which uses function APIs to implement orchestration.
+
+## Quick Start
+
+Including flow node implementation, flow orchestration and flow execution
+
+### Maven
+
+```agsl
+<dependency>
+    <groupId>org.salt</groupId>
+    <artifactId>salt-function-flow</artifactId>
+    <version>1.0-SNAPSHOT</version>
+</dependency>
+```
+
+### Implement flow node
+Integrate FlowNodeWithReturn, implement doProcess method, and declare @NodeIdentity
+```
+@NodeIdentity(nodeId = "demo_add")
+public class DemoAddNode extends FlowNodeWithReturn<Integer> {
+    
+    @Override
+    public Integer doProcess(IContextBus iContextBus) {
+        Integer preResult = (Integer) iContextBus.getPreResult();
+        Integer result = preResult + 123;
+        System.out.println("DemoAddNode: " + preResult + "+123=" + result);
+        return result;
+    }
+}
+
+@NodeIdentity(nodeId = "demo_reduce")
+public class DemoReduceNode extends FlowNodeWithReturn<Integer> {
+
+    @Override
+    public Integer doProcess(IContextBus iContextBus) {
+        Integer preResult = (Integer) iContextBus.getPreResult();
+        Integer result = preResult - 15;
+        System.out.println("DemoReduceNode: " + preResult + "-15=" + result) ;
+        return result;
+    }
+}
+
+@NodeIdentity(nodeId = "demo_multiply")
+public class DemoMultiplyNode extends FlowNodeWithReturn<Integer> {
+    
+    @Override
+    public Integer doProcess(IContextBus iContextBus) {
+        Integer preResult = (Integer) iContextBus.getPreResult();
+        Integer result = preResult * 73;
+        System.out.println("DemoMultiplyNode: " + preResult + "*73=" + result);
+        return result;
+    }
+}
+
+@NodeIdentity(nodeId = "demo_division")
+public class DemoDivisionNode extends FlowNodeWithReturn<Integer> {
+
+    @Override
+    public Integer doProcess(IContextBus iContextBus) {
+        Integer preResult = (Integer) iContextBus.getPreResult();
+        Integer result = preResult / 12;
+        System.out.println("DemoDivisionNode: " + preResult + "/12=" + result);
+        return result;
+    }
+}
+```
+
+### Orchestrate flow node
+Implement IFlowInit bean to initialize flow
+```
+@Autowired
+FlowEngine flowEngine;
+
+flowEngine.builder().id("demo_flow").next("demo_add").next("demo_reduce").next("demo_multiply").result("demo_division").build();
+```
+
+### Execute flow
+
+```
+@Autowired
+FlowEngine flowEngine;
+
+Integer result = flowEngine.execute("demo_flow", 39);
+System.out.println("demo_flow result: " + result);
+```
+
+### Result
+
+```
+DemoAddNode: 39+123=162
+DemoReduceNode: 162-15=147
+DemoMultiplyNode: 147*73=10731
+DemoDivisionNode: 10731/12=894
+demo_flow result: 894
+```
