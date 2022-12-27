@@ -8,11 +8,11 @@ Including flow node implementation, flow orchestration and flow execution
 
 ### Maven
 
-```agsl
+```
 <dependency>
-    <groupId>org.salt</groupId>
+    <groupId>cn.fenglingsoftware</groupId>
     <artifactId>salt-function-flow</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0</version>
 </dependency>
 ```
 
