@@ -12,16 +12,16 @@ Including flow node implementation, flow orchestration and flow execution
 <dependency>
     <groupId>cn.fenglingsoftware</groupId>
     <artifactId>salt-function-flow</artifactId>
-    <version>1.0</version>
+    <version>1.0.1</version>
 </dependency>
 ```
 
 ### Implement flow node
 Inherit the FlowNodeWithReturn class, implement the doProcess method, declare @ NodeIdentity, and specify the node ID
 ```
+//Get the return value of the previous node, and add 123 to return
 @NodeIdentity(nodeId = "demo_add")
 public class DemoAddNode extends FlowNodeWithReturn<Integer> {
-    
     @Override
     public Integer doProcess(IContextBus iContextBus) {
         Integer preResult = (Integer) iContextBus.getPreResult();
@@ -30,10 +30,11 @@ public class DemoAddNode extends FlowNodeWithReturn<Integer> {
         return result;
     }
 }
-
+```
+```
+//Get the return value of the previous node, and subtract 15 to return
 @NodeIdentity(nodeId = "demo_reduce")
 public class DemoReduceNode extends FlowNodeWithReturn<Integer> {
-
     @Override
     public Integer doProcess(IContextBus iContextBus) {
         Integer preResult = (Integer) iContextBus.getPreResult();
@@ -42,10 +43,11 @@ public class DemoReduceNode extends FlowNodeWithReturn<Integer> {
         return result;
     }
 }
-
+```
+```
+//Get the return value of the previous node and multiply by 73 to return
 @NodeIdentity(nodeId = "demo_multiply")
 public class DemoMultiplyNode extends FlowNodeWithReturn<Integer> {
-    
     @Override
     public Integer doProcess(IContextBus iContextBus) {
         Integer preResult = (Integer) iContextBus.getPreResult();
@@ -54,10 +56,11 @@ public class DemoMultiplyNode extends FlowNodeWithReturn<Integer> {
         return result;
     }
 }
-
+```
+```
+//Get the return value of the previous node, divide by 12, and return
 @NodeIdentity(nodeId = "demo_division")
 public class DemoDivisionNode extends FlowNodeWithReturn<Integer> {
-
     @Override
     public Integer doProcess(IContextBus iContextBus) {
         Integer preResult = (Integer) iContextBus.getPreResult();
@@ -69,7 +72,7 @@ public class DemoDivisionNode extends FlowNodeWithReturn<Integer> {
 ```
 
 ### Orchestrate flow node
-Implement IFlowInit bean to initialize flow
+Inject FlowEngine type bean with the registered ID of demo_flow process, use API to arrange nodes for sequential execution
 ```
 @Autowired
 FlowEngine flowEngine;
@@ -96,3 +99,7 @@ DemoMultiplyNode: 147*73=10731
 DemoDivisionNode: 10731/12=894
 demo_flow result: 894
 ```
+
+## Documentation
+
+[中文](https://blog.csdn.net/fenglingguitar/article/details/128500457)
