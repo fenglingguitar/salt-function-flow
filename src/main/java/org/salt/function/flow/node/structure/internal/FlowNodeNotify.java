@@ -14,15 +14,31 @@
 
 package org.salt.function.flow.node.structure.internal;
 
-import org.salt.function.flow.thread.TheadHelper;
+import org.salt.function.flow.Info;
+import org.salt.function.flow.context.ContextBus;
+import org.salt.function.flow.context.IContextBus;
+import org.salt.function.flow.node.structure.FlowNodeStructure;
 
-public class FlowNodeNotify<P> extends FlowNodeConcurrent<P> {
+import java.util.List;
 
-    public FlowNodeNotify(TheadHelper theadHelper) {
-        super(theadHelper);
-    }
+public class FlowNodeNotify<P> extends FlowNodeStructure<P> {
 
-    protected boolean getModel() {
-        return false;
+    @Override
+    public P doProcessGateway(IContextBus iContextBus, List<Info> infoList) {
+        for (Info info : infoList) {
+            theadHelper.getExecutor().submit(theadHelper.getDecoratorAsync(() -> {
+                try {
+                    if (isFlowNode(info.id)) {
+                        flowNodeManager.executeVoidSingle(iContextBus, info.id);
+                    } else {
+                        ContextBus contextBusChild = ((ContextBus) iContextBus).copyNotify(info.id);
+                        flowEngine.executeBranchVoid(contextBusChild, info.id);
+                    }
+                } catch (Exception e) {
+                    ((ContextBus) iContextBus).putPassException(info.id, e);
+                }
+            }, info));
+        }
+        return null;
     }
 }

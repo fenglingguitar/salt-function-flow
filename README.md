@@ -17,7 +17,7 @@ Including flow node implementation, flow orchestration and flow execution
 ```
 
 ### Implement flow node
-Integrate FlowNodeWithReturn, implement doProcess method, and declare @NodeIdentity
+Inherit the FlowNodeWithReturn class, implement the doProcess method, declare @ NodeIdentity, and specify the node ID
 ```
 @NodeIdentity(nodeId = "demo_add")
 public class DemoAddNode extends FlowNodeWithReturn<Integer> {

@@ -12,20 +12,20 @@
  * limitations under the License.
  */
 
-package org.salt.function.flow.demo.node;
+package org.salt.function.flow.demo.math.node;
 
 import org.salt.function.flow.context.IContextBus;
 import org.salt.function.flow.node.FlowNodeWithReturn;
 import org.salt.function.flow.node.register.NodeIdentity;
 
-@NodeIdentity(nodeId = "demo_multiply")
-public class DemoMultiplyNode extends FlowNodeWithReturn<Integer> {
+@NodeIdentity(nodeId = "demo_reduce")
+public class DemoReduceNode extends FlowNodeWithReturn<Integer> {
 
     @Override
     public Integer doProcess(IContextBus iContextBus) {
         Integer preResult = (Integer) iContextBus.getPreResult();
-        Integer result = preResult * 73;
-        System.out.println("DemoMultiplyNode: " + preResult + "*73=" + result);
+        Integer result = preResult - 15;
+        System.out.println("DemoReduceNode: " + preResult + "-15=" + result) ;
         return result;
     }
 }

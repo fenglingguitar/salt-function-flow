@@ -17,11 +17,17 @@ package org.salt.function.flow.node.structure;
 import lombok.extern.slf4j.Slf4j;
 import org.salt.function.flow.FlowEngine;
 import org.salt.function.flow.Info;
+import org.salt.function.flow.context.ContextBus;
+import org.salt.function.flow.context.IContextBus;
 import org.salt.function.flow.node.FlowNodeWithReturn;
 import org.salt.function.flow.node.IResult;
 import org.salt.function.flow.node.register.FlowNodeManager;
+import org.salt.function.flow.thread.TheadHelper;
+import org.salt.function.flow.util.FlowUtil;
+import org.springframework.util.CollectionUtils;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 public abstract class FlowNodeStructure<P> extends FlowNodeWithReturn<P> {
@@ -32,7 +38,9 @@ public abstract class FlowNodeStructure<P> extends FlowNodeWithReturn<P> {
 
     protected IResult<P> result;
 
-    protected List<Info> infoList;
+    protected List<Info<P, ?>> infoList;
+
+    protected TheadHelper theadHelper;
 
     public void setFlowEngine(FlowEngine flowEngine) {
         this.flowEngine = flowEngine;
@@ -46,12 +54,50 @@ public abstract class FlowNodeStructure<P> extends FlowNodeWithReturn<P> {
         this.result = result;
     }
 
-    public void setNodeInfoList(List<Info> infoList) {
+    public void setNodeInfoList(List<Info<P, ?>> infoList) {
         this.infoList = infoList;
+    }
+
+    public void setTheadHelper(TheadHelper theadHelper) {
+        this.theadHelper = theadHelper;
     }
 
     protected boolean isFlowNode(String nodeId) {
         return flowNodeManager.getIFlowNode(nodeId) != null;
     }
 
+    public P doProcess(IContextBus iContextBus) {
+        if (CollectionUtils.isEmpty(infoList)) {
+            return null;
+        }
+        List<Info> infoListExe = infoList.stream().filter(info -> FlowUtil.isExe(iContextBus, info)).collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(infoListExe)) {
+            return null;
+        }
+        return doProcessGateway(iContextBus, infoListExe);
+    }
+
+    protected P doProcessGateway(IContextBus iContextBus, List<Info> infoList) {
+        return null;
+    }
+
+    protected P execute(IContextBus iContextBus, String id) {
+        if (isFlowNode(id)) {
+            return flowNodeManager.execute(iContextBus, id);
+        } else {
+            return (P) flowEngine.executeBranch(iContextBus, id);
+        }
+    }
+
+    protected void executeVoid(IContextBus iContextBus, String id) {
+        if (isFlowNode(id)) {
+            flowNodeManager.executeVoid(iContextBus, id);
+        } else {
+            flowEngine.executeBranchVoid(iContextBus, id);
+        }
+    }
+
+    protected boolean isSuspend(IContextBus iContextBus) {
+        return ((ContextBus) iContextBus).isRollbackProcess() || ((ContextBus) iContextBus).isStopProcess();
+    }
 }

@@ -12,20 +12,25 @@
  * limitations under the License.
  */
 
-package org.salt.function.flow.demo.node;
+package org.salt.function.flow.test.stop.node;
 
 import org.salt.function.flow.context.IContextBus;
 import org.salt.function.flow.node.FlowNodeWithReturn;
 import org.salt.function.flow.node.register.NodeIdentity;
 
-@NodeIdentity(nodeId = "demo_reduce")
-public class DemoReduceNode extends FlowNodeWithReturn<Integer> {
+@NodeIdentity(nodeId = "demo_bit_or")
+public class DemoBitOrNode extends FlowNodeWithReturn<Integer> {
 
     @Override
     public Integer doProcess(IContextBus iContextBus) {
         Integer preResult = (Integer) iContextBus.getPreResult();
-        Integer result = preResult - 15;
-        System.out.println("DemoReduceNode: " + preResult + "-15=" + result) ;
-        return result;
+        if (preResult > 500) {
+            System.out.println("DemoBitOrNode: throw exception");
+            throw new RuntimeException("DemoBitOrNode Exception!");
+        } else {
+            Integer result = preResult | 128;
+            System.out.println("DemoBitOrNode: " + preResult + "|128=" + result);
+            return result;
+        }
     }
 }

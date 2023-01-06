@@ -1,0 +1,8 @@
+salt:
+  function:
+    flow:
+      threadpool:
+        coreSize: 50
+        maxSize: 150
+        queueCapacity: 256
+        keepAlive: 30

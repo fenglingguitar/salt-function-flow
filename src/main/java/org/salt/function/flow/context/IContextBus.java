@@ -29,6 +29,11 @@ public interface IContextBus<T, R> {
     R getResult();
 
     /**
+     * Set flow execution result
+     */
+    void setResult(R result);
+
+    /**
      * Put additional transmission context information
      */
     <P> void putTransmitInfo(String key, P content);
@@ -39,11 +44,11 @@ public interface IContextBus<T, R> {
     <P> P getTransmitInfo(String key);
 
     /**
-     * Get the parameters of flow condition judgment
+     * Get the parameters of node condition judgment
      */
     Map<String, Object> getConditionMap();
     /**
-     * Add the parameters of flow condition judgment
+     * Add the parameters of node condition judgment
      */
     <P> void addCondition(String key, P value);
 

@@ -12,17 +12,15 @@
  * limitations under the License.
  */
 
-package org.salt.function.flow.demo;
+package org.salt.function.flow;
 
-import org.salt.function.flow.config.IFlowInit;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-@Configuration
-public class DemoConfiguration {
+@SpringBootApplication(scanBasePackages = "org.salt.function.flow")
+public class TestApplication {
 
-    @Bean
-    IFlowInit flowInit() {
-        return new DemoFlowInit();
+    public static void main(String[] args) {
+        SpringApplication.run(TestApplication.class, args);
     }
 }

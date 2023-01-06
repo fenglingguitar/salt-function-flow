@@ -62,7 +62,7 @@ public class FlowConfiguration {
         threadPoolTaskExecutor.setQueueCapacity(queueCapacity);
         threadPoolTaskExecutor.setKeepAliveSeconds(keepAlive);
         threadPoolTaskExecutor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
-        threadPoolTaskExecutor.setThreadNamePrefix("thread-pool-flow");
+        threadPoolTaskExecutor.setThreadNamePrefix("thread-pool-flow-");
         threadPoolTaskExecutor.setWaitForTasksToCompleteOnShutdown(true);
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             threadPoolTaskExecutor.shutdown();

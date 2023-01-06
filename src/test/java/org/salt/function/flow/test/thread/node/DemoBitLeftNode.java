@@ -12,20 +12,26 @@
  * limitations under the License.
  */
 
-package org.salt.function.flow.demo.node;
+package org.salt.function.flow.test.thread.node;
 
 import org.salt.function.flow.context.IContextBus;
 import org.salt.function.flow.node.FlowNodeWithReturn;
 import org.salt.function.flow.node.register.NodeIdentity;
+import org.salt.function.flow.test.thread.TestThreadContent;
+import org.springframework.beans.factory.annotation.Autowired;
 
-@NodeIdentity(nodeId = "demo_division")
-public class DemoDivisionNode extends FlowNodeWithReturn<Integer> {
+@NodeIdentity(nodeId = "demo_bit_left")
+public class DemoBitLeftNode extends FlowNodeWithReturn<Integer> {
+
+    @Autowired
+    TestThreadContent testThreadContent;
 
     @Override
     public Integer doProcess(IContextBus iContextBus) {
+        System.out.println("TheadLocal: " + testThreadContent.get("test"));
         Integer preResult = (Integer) iContextBus.getPreResult();
-        Integer result = preResult / 12;
-        System.out.println("DemoDivisionNode: " + preResult + "/12=" + result);
+        Integer result = preResult << 1;
+        System.out.println("DemoBitLeftNode: " + preResult + "<<1=" + result);
         return result;
     }
 }

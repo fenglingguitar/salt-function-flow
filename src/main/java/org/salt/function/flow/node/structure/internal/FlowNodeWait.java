@@ -19,45 +19,37 @@ import org.salt.function.flow.Info;
 import org.salt.function.flow.context.ContextBus;
 import org.salt.function.flow.context.IContextBus;
 import org.salt.function.flow.node.structure.FlowNodeStructure;
-import org.salt.function.flow.util.FlowUtil;
-import org.springframework.util.CollectionUtils;
+
+import java.util.List;
 
 @Slf4j
 public class FlowNodeWait<P> extends FlowNodeStructure<P> {
 
-    private long timeout;
-
-    public FlowNodeWait(long timeout) {
-        this.timeout = timeout;
-    }
-
     @Override
-    public P doProcess(IContextBus iContextBus) {
-        if (CollectionUtils.isEmpty(infoList)) {
-            return null;
-        }
-        ContextBus contextBus = ((ContextBus) iContextBus);
-        long lastTimeout = timeout;
+    public P doProcessGateway(IContextBus iContextBus, List<Info> infoList) {
+        long lastTimeout = theadHelper.getTimeout();
         for (Info info : infoList) {
-            if (!FlowUtil.isExe(contextBus, info)) {
-                continue;
-            }
             if (lastTimeout <= 0) {
-                contextBus.putPassException(info.id, new RuntimeException("beyond maxTimeout"));
-                return result(contextBus, true);
+                ((ContextBus) iContextBus).putPassException(info.id, new RuntimeException("beyond maxTimeout"));
+                return result(iContextBus, true);
             }
             long start = System.currentTimeMillis();
             try {
-                Object result = (P) contextBus.getPassResult(info.id, lastTimeout);
+                P result = (P) ((ContextBus) iContextBus).getPassResult(info.id, lastTimeout);
                 if (result != null) {
-                    contextBus.putPassResult(info.id, result);
+                    ((ContextBus) iContextBus).putPassResult(info.id, result);
+                } else {
+                    ((ContextBus) iContextBus).removePassResult(info.id);
                 }
             } catch (Exception e) {
-                contextBus.putPassException(info.id, e);
+                ((ContextBus) iContextBus).putPassException(info.id, e);
             }
             lastTimeout -= System.currentTimeMillis() - start;
         }
-        return result(contextBus, lastTimeout <= 0);
+        if (isSuspend(iContextBus)) {
+            return null;
+        }
+        return result(iContextBus, lastTimeout <= 0);
     }
 
     public P result(IContextBus iContextBus, boolean isTimeout) {

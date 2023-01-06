@@ -29,16 +29,21 @@ public abstract class FlowNodeWithReturn<P> extends FlowNode {
         P result = doProcess(iContextBus);
         if (result != null) {
             String idTmp = nodeId;
+            Object adapterResult = null;
             Info info = ContextBus.getNodeInfo(FlowUtil.getNodeInfoKey(nodeId));
             if (info != null) {
                 if (info.output != null) {
-                    info.output.accept(contextBus, result);
+                    adapterResult = info.output.apply(contextBus, result);
                 }
                 if (StringUtils.isNotEmpty(info.idAlias)) {
                     idTmp = info.idAlias;
                 }
             }
-            contextBus.putPassResult(idTmp, result);
+            if (adapterResult != null) {
+                contextBus.putPassResult(idTmp, adapterResult);
+            } else {
+                contextBus.putPassResult(idTmp, result);
+            }
             ContextBus.putLastNodeId(idTmp);
         }
     }

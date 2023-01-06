@@ -12,20 +12,25 @@
  * limitations under the License.
  */
 
-package org.salt.function.flow.demo.node;
+package org.salt.function.flow.test.thread.node;
 
 import org.salt.function.flow.context.IContextBus;
 import org.salt.function.flow.node.FlowNodeWithReturn;
 import org.salt.function.flow.node.register.NodeIdentity;
 
-@NodeIdentity(nodeId = "demo_add")
-public class DemoAddNode extends FlowNodeWithReturn<Integer> {
+@NodeIdentity(nodeId = "demo_bit_right")
+public class DemoBitRightNode extends FlowNodeWithReturn<Integer> {
 
     @Override
     public Integer doProcess(IContextBus iContextBus) {
+        try {
+            Thread.sleep(15);
+        } catch (InterruptedException e) {
+        }
+        System.out.println("CurrentThread: " + Thread.currentThread().getName());
         Integer preResult = (Integer) iContextBus.getPreResult();
-        Integer result = preResult + 123;
-        System.out.println("DemoAddNode: " + preResult + "+123=" + result);
+        Integer result = preResult >> 1;
+        System.out.println("DemoBitRightNode: " + preResult + ">>1=" + result);
         return result;
     }
 }

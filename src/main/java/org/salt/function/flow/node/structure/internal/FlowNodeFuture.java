@@ -18,55 +18,26 @@ import lombok.extern.slf4j.Slf4j;
 import org.salt.function.flow.Info;
 import org.salt.function.flow.context.ContextBus;
 import org.salt.function.flow.context.IContextBus;
-import org.salt.function.flow.node.FlowNodeWithReturn;
 import org.salt.function.flow.node.structure.FlowNodeStructure;
-import org.salt.function.flow.thread.TheadHelper;
-import org.salt.function.flow.util.FlowUtil;
-import org.springframework.util.CollectionUtils;
 
+import java.util.List;
 import java.util.concurrent.Future;
 
 @Slf4j
 public class FlowNodeFuture<P> extends FlowNodeStructure<P> {
 
-    protected TheadHelper theadHelper;
-
-    public FlowNodeFuture(TheadHelper theadHelper) {
-        this.theadHelper = theadHelper;
-    }
-
     @Override
-    public P doProcess(IContextBus iContextBus) {
-        if (CollectionUtils.isEmpty(infoList)) {
-            return null;
-        }
-        ContextBus contextBus = ((ContextBus) iContextBus);
+    public P doProcessGateway(IContextBus iContextBus, List<Info> infoList) {
         for (Info info : infoList) {
-            if (!FlowUtil.isExe(contextBus, info)) {
-                continue;
-            }
-            Future<?> future = theadHelper.getExecutor().submit(theadHelper.getDecorator(() -> {
+            Future<?> future = theadHelper.getExecutor().submit(theadHelper.getDecoratorAsync(() -> {
                 try {
-                    ContextBus.setNodeInfo(info);
-                    if (isFlowNode(info.id)) {
-                        return flowNodeManager.execute(info.id,
-                                flowNode -> {
-                                    Object object = ((FlowNodeWithReturn) flowNode).doProcess(contextBus);
-                                    contextBus.roolbackExec(flowNode);
-                                    return object;
-                                });
-                    } else {
-                        ContextBus contextBusChild = contextBus.copy(info.id);
-                        return flowEngine.execute(contextBusChild);
-                    }
+                    return execute(iContextBus, info.id);
                 } catch (Exception e) {
-                    contextBus.putPassException(info.id, e);
-                } finally {
-                    ContextBus.cleanNodeInfo(info);
+                    ((ContextBus) iContextBus).putPassException(info.id, e);
                 }
                 return null;
-            }));
-            contextBus.putPassResult(info.id, future);
+            }, info));
+            ((ContextBus) iContextBus).putPassResult(info.id, future);
         }
         return null;
     }

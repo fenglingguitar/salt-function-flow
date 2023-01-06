@@ -17,6 +17,8 @@ package org.salt.function.flow.thread;
 import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.salt.function.flow.Info;
+import org.salt.function.flow.util.FlowUtil;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -54,32 +56,47 @@ public class TheadHelper {
         threadLocal.set(null);
     }
 
-    public Runnable getDecorator(Runnable runnable) {
-        Map<String, Object> map = new HashMap<>(threadLocal.get());
-        final Object content = getThreadContent();
+    public Runnable getDecoratorSync(Runnable runnable, Info info) {
         return () -> {
-            threadLocal.set(map);
-            setThreadContent(content);
+            putThreadLocal(FlowUtil.getNodeInfoKey(info.id) , info);
             try {
                 runnable.run();
             } finally {
-                threadLocal.set(null);
-                cleanThreadContent();
+                TheadHelper.putThreadLocal(FlowUtil.getNodeInfoKey(info.id), null);
             }
         };
     }
 
-    public Callable getDecorator(Callable callable) {
+    public Runnable getDecoratorAsync(Runnable runnable, Info info) {
         Map<String, Object> map = new HashMap<>(threadLocal.get());
         final Object content = getThreadContent();
         return () -> {
             threadLocal.set(map);
             setThreadContent(content);
+            putThreadLocal(FlowUtil.getNodeInfoKey(info.id) , info);
+            try {
+                runnable.run();
+            } finally {
+                TheadHelper.putThreadLocal(FlowUtil.getNodeInfoKey(info.id), null);
+                cleanThreadContent();
+                threadLocal.set(null);
+            }
+        };
+    }
+
+    public Callable getDecoratorAsync(Callable callable, Info info) {
+        Map<String, Object> map = new HashMap<>(threadLocal.get());
+        final Object content = getThreadContent();
+        return () -> {
+            threadLocal.set(map);
+            setThreadContent(content);
+            putThreadLocal(FlowUtil.getNodeInfoKey(info.id) , info);
             try {
                 return callable.call();
             } finally {
-                threadLocal.set(null);
+                TheadHelper.putThreadLocal(FlowUtil.getNodeInfoKey(info.id), null);
                 cleanThreadContent();
+                threadLocal.set(null);
             }
         };
     }

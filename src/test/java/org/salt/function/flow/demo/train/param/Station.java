@@ -12,15 +12,14 @@
  * limitations under the License.
  */
 
-package org.salt.function.flow.demo;
+package org.salt.function.flow.demo.train.param;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+import lombok.Builder;
+import lombok.Data;
 
-@SpringBootApplication(scanBasePackages = "org.salt.function.flow")
-public class DemoApplication {
-
-    public static void main(String[] args) {
-        SpringApplication.run(DemoApplication.class, args);
-    }
+@Data
+@Builder
+public class Station {
+    String from;
+    String to;
 }

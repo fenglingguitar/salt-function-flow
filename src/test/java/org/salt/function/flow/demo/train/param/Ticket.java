@@ -12,12 +12,14 @@
  * limitations under the License.
  */
 
-package org.salt.function.flow.node;
+package org.salt.function.flow.demo.train.param;
 
-import org.salt.function.flow.context.IContextBus;
+import lombok.Builder;
+import lombok.Data;
 
-public interface IFlowNode {
-    String nodeId();
-    void process(IContextBus iContextBus);
-    default <T, R> void rollback(IContextBus<T, R> iContextBus) {}
+@Data
+@Builder
+public class Ticket {
+    boolean result;
+    int price;
 }

@@ -17,12 +17,14 @@ package org.salt.function.flow;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.salt.function.flow.context.IContextBus;
 
-import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 @Data
+@NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class Info<P, I> {
@@ -30,6 +32,6 @@ public class Info<P, I> {
     public String include;
     public Function<IContextBus, Boolean> match;
     public Function<IContextBus, I> input;
-    public BiConsumer<IContextBus, P> output;
+    public BiFunction<IContextBus, P, Object> output;
     public String idAlias;
 }

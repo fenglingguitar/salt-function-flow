@@ -15,10 +15,32 @@
 package org.salt.function.flow.node.structure.internal;
 
 import lombok.extern.slf4j.Slf4j;
+import org.salt.function.flow.Info;
+import org.salt.function.flow.context.ContextBus;
+import org.salt.function.flow.context.IContextBus;
+import org.salt.function.flow.node.structure.FlowNodeStructure;
+
+import java.util.List;
 
 @Slf4j
-public class FlowNodeAll<P> extends FlowNodeNext<P> {
-    protected boolean getModel() {
-        return false;
+public class FlowNodeAll<P> extends FlowNodeStructure<P> {
+    @Override
+    public P doProcessGateway(IContextBus iContextBus, List<Info> infoList) {
+        for (Info info : infoList) {
+            theadHelper.getDecoratorSync(() -> {
+                try {
+                    executeVoid(iContextBus, info.id);
+                } catch (Exception e) {
+                    ((ContextBus) iContextBus).putPassException(info.id, e);
+                }
+            }, info).run();
+            if (isSuspend(iContextBus)) {
+                return null;
+            }
+        }
+        if (result != null) {
+            return result.handle(iContextBus, false);
+        }
+        return null;
     }
 }

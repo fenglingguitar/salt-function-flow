@@ -12,20 +12,20 @@
  * limitations under the License.
  */
 
-package org.salt.function.flow.demo.node;
+package org.salt.function.flow.demo.math.node;
 
 import org.salt.function.flow.context.IContextBus;
 import org.salt.function.flow.node.FlowNodeWithReturn;
 import org.salt.function.flow.node.register.NodeIdentity;
 
-@NodeIdentity(nodeId = "demo_remainder")
-public class DemoRemainderNode extends FlowNodeWithReturn<Integer> {
+@NodeIdentity(nodeId = "demo_division")
+public class DemoDivisionNode extends FlowNodeWithReturn<Integer> {
 
     @Override
     public Integer doProcess(IContextBus iContextBus) {
         Integer preResult = (Integer) iContextBus.getPreResult();
-        Integer result = preResult % 50;
-        System.out.println("DemoRemainderNode: " + preResult + "%50=" + result) ;
+        Integer result = preResult / 12;
+        System.out.println("DemoDivisionNode: " + preResult + "/12=" + result);
         return result;
     }
 }

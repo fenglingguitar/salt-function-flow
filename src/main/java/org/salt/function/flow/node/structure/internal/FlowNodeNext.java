@@ -19,57 +19,25 @@ import org.salt.function.flow.Info;
 import org.salt.function.flow.context.ContextBus;
 import org.salt.function.flow.context.IContextBus;
 import org.salt.function.flow.node.structure.FlowNodeStructure;
-import org.salt.function.flow.util.FlowUtil;
-import org.springframework.util.CollectionUtils;
+
+import java.util.List;
 
 @Slf4j
 public class FlowNodeNext<P> extends FlowNodeStructure<P> {
 
     @Override
-    public P doProcess(IContextBus iContextBus) {
-        if (CollectionUtils.isEmpty(infoList)) {
-            return null;
-        }
-
-        ContextBus contextBus = ((ContextBus) iContextBus);
+    public P doProcessGateway(IContextBus iContextBus, List<Info> infoList) {
         for (Info info : infoList) {
-            if (!FlowUtil.isExe(contextBus, info)) {
-                continue;
-            }
-            try {
-                ContextBus.setNodeInfo(info);
-                if (isFlowNode(info.id)) {
-                    flowNodeManager.executeVoid(info.id,
-                            flowNode -> {
-                                flowNode.process(contextBus);
-                                contextBus.roolbackExec(flowNode);
-                            });
-                } else {
-                    ContextBus contextBusChild = contextBus.copy(info.id);
-                    Object result = flowEngine.execute(contextBusChild);
-                    if (result != null) {
-                        contextBus.putPassResult(info.id, result);
-                    }
-                }
-            } catch (Exception e) {
-                contextBus.putPassException(info.id, e);
-                if (getModel()) {
+            theadHelper.getDecoratorSync(() -> {
+                try {
+                    executeVoid(iContextBus, info.id);
+                } catch (Exception e) {
+                    ((ContextBus) iContextBus).putPassException(info.id, e);
                     throw e;
                 }
-            } finally {
-                ContextBus.cleanNodeInfo(info);
-            }
-            if (getModel()) {
-                return null;
-            }
-        }
-        if (result != null) {
-            return result.handle(iContextBus, false);
+            }, info).run();
+            return null;
         }
         return null;
-    }
-
-    protected boolean getModel() {
-        return true;
     }
 }

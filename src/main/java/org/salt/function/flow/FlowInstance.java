@@ -49,20 +49,12 @@ public class FlowInstance {
     protected <T, R> R execute(ContextBus<T, R> contextBus) {
         if (!CollectionUtils.isEmpty(nodeList)) {
             for (String nodeId : nodeList) {
-                final boolean[] stopSign = {false};
-                flowEngine.flowNodeManager.executeVoid(
-                        nodeId,
-                        s -> {
-                            s.process(contextBus);
-                            if (contextBus.roolbackExecList(s)) {
-                                stopSign[0] = true;
-                                return;
-                            }
-                            if (contextBus.isStopProcess()) {
-                                stopSign[0] = true;
-                            }
-                        });
-                if (stopSign[0]) {
+                flowEngine.flowNodeManager.executeVoidSingle(contextBus, nodeId);
+                if (contextBus.isRollbackProcess()) {
+                    contextBus.roolbackAll();
+                    break;
+                }
+                if (contextBus.isStopProcess()) {
                     break;
                 }
             }

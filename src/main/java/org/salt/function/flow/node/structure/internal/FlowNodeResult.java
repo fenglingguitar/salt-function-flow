@@ -17,7 +17,6 @@ package org.salt.function.flow.node.structure.internal;
 import lombok.extern.slf4j.Slf4j;
 import org.salt.function.flow.context.ContextBus;
 import org.salt.function.flow.context.IContextBus;
-import org.salt.function.flow.node.FlowNodeWithReturn;
 import org.salt.function.flow.node.structure.FlowNodeStructure;
 
 @Slf4j
@@ -28,14 +27,7 @@ public class FlowNodeResult<P> extends FlowNodeStructure<P> {
     @Override
     public P doProcess(IContextBus iContextBus) {
         ContextBus contextBus = (ContextBus) iContextBus;
-        P result = (P) flowNodeManager.execute(
-                nodeIdResult,
-                s -> {
-                    if (!(s instanceof FlowNodeWithReturn)) {
-                        throw new RuntimeException("node is not ProcessNodeWithReturn");
-                    }
-                    return ((FlowNodeWithReturn)s).doProcess(contextBus);
-                });
+        P result = flowNodeManager.execute(iContextBus, nodeIdResult);
         if (result != null) {
             contextBus.setResult(result);
         }

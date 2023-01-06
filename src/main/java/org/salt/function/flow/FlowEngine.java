@@ -18,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.salt.function.flow.config.IFlowInit;
 import org.salt.function.flow.context.ContextBus;
+import org.salt.function.flow.context.IContextBus;
 import org.salt.function.flow.node.FlowNode;
 import org.salt.function.flow.node.IResult;
 import org.salt.function.flow.node.register.FlowNodeManager;
@@ -66,11 +67,11 @@ public class FlowEngine implements InitializingBean {
         return execute(flowId, param, null);
     }
 
-    public <T, R> R execute(String flowId, T param, Map<String, Object> transmitMap) {
-        return execute(flowId, param, transmitMap, null);
+    public <T, R> R execute(String flowId, T param, Map<String, Object> conditionMap) {
+        return execute(flowId, param, conditionMap, null);
     }
 
-    public <T, R> R execute(String flowId, T param, Map<String, Object> transmitMap, Map<String, Object> conditionMap) {
+    public <T, R> R execute(String flowId, T param, Map<String, Object> conditionMap, Map<String, Object> transmitMap) {
         FlowInstance flowInstance = processInstanceMap.get(flowId);
         if (flowInstance != null) {
             return flowInstance.execute(param, transmitMap, conditionMap);
@@ -98,6 +99,26 @@ public class FlowEngine implements InitializingBean {
         throw new RuntimeException("no have this process");
     }
 
+    public <T, R> R executeBranch(IContextBus<T, R> iContextBus, String id) {
+        ContextBus contextBusChild = ((ContextBus) iContextBus).copy(id);
+        R result = (R) execute(contextBusChild);
+        if (contextBusChild.isRollbackProcess()) {
+            iContextBus.rollbackProcess();
+        }
+        if (contextBusChild.isStopProcess()) {
+            iContextBus.stopProcess();
+        }
+        return result;
+    }
+
+    public <T, R> R executeBranchVoid(IContextBus<T, R> iContextBus, String id) {
+        R result = executeBranch(iContextBus, id);
+        if (result != null) {
+            ((ContextBus) iContextBus).putPassResult(id, result);
+        }
+        return result;
+    }
+
     public Builder builder() {
         return new Builder(this);
     }
@@ -114,11 +135,11 @@ public class FlowEngine implements InitializingBean {
 
         public Builder(FlowEngine flowEngine) {
             this.flowEngine = flowEngine;
+            this.idList = new ArrayList<>();
         }
 
         public Builder id(String flowId) {
             this.flowId = flowId;
-            idList = new ArrayList<>();
             return this;
         }
 
@@ -179,6 +200,10 @@ public class FlowEngine implements InitializingBean {
             return concurrent(result, timeout, toInfos(ids));
         }
 
+        public Builder concurrent(IResult result, ExecutorService isolate, String... ids) {
+            return concurrent(result, isolate, toInfos(ids));
+        }
+
         public Builder concurrent(IResult result, long timeout, ExecutorService isolate, String... ids) {
             return concurrent(result, timeout, isolate, toInfos(ids));
         }
@@ -199,12 +224,16 @@ public class FlowEngine implements InitializingBean {
             return concurrent(InitParam.builder().infos(infos).result(result).timeout(timeout).build());
         }
 
+        public Builder concurrent(IResult result, ExecutorService isolate, Info... infos) {
+            return concurrent(InitParam.builder().infos(infos).result(result).isolate(isolate).build());
+        }
+
         public Builder concurrent(IResult result, long timeout, ExecutorService isolate, Info... infos) {
             return concurrent(InitParam.builder().infos(infos).result(result).timeout(timeout).isolate(isolate).build());
         }
 
         private Builder concurrent(InitParam initParam) {
-            init(tempName("concurrent", initParam.idTmp), new FlowNodeConcurrent<>(creatThreadHelper(initParam)), initParam);
+            init(tempName("concurrent", initParam.idTmp), new FlowNodeConcurrent<>(), initParam);
             return this;
         }
 
@@ -226,7 +255,7 @@ public class FlowEngine implements InitializingBean {
         }
 
         private Builder notify(InitParam initParam) {
-            init(tempName("notify", initParam.idTmp), new FlowNodeNotify<>(creatThreadHelper(initParam)), initParam);
+            init(tempName("notify", initParam.idTmp), new FlowNodeNotify<>(), initParam);
             return this;
         }
 
@@ -248,7 +277,7 @@ public class FlowEngine implements InitializingBean {
         }
 
         private Builder future(InitParam initParam) {
-            init(tempName("future", initParam.idTmp), new FlowNodeFuture(creatThreadHelper(initParam)), initParam);
+            init(tempName("future", initParam.idTmp), new FlowNodeFuture(), initParam);
             return this;
         }
 
@@ -286,7 +315,7 @@ public class FlowEngine implements InitializingBean {
         }
 
         private Builder wait(InitParam initParam) {
-            init(tempName("wait", initParam.idTmp), new FlowNodeWait<>(initParam.timeout), initParam);
+            init(tempName("wait", initParam.idTmp), new FlowNodeWait<>(), initParam);
             return this;
         }
 
@@ -347,6 +376,7 @@ public class FlowEngine implements InitializingBean {
                 flowNodeStructure.setFlowEngine(flowEngine);
                 flowNodeStructure.setFlowNodeManager(flowEngine.flowNodeManager);
                 flowNodeStructure.setResult(initParam.result);
+                flowNodeStructure.setTheadHelper(creatThreadHelper(initParam));
                 if (initParam.infos != null) {
                     flowNodeStructure.setNodeInfoList(Arrays.asList(initParam.infos));
                 }

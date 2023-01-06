@@ -12,12 +12,19 @@
  * limitations under the License.
  */
 
-package org.salt.function.flow.node;
+package org.salt.function.flow.demo.train.node;
 
 import org.salt.function.flow.context.IContextBus;
+import org.salt.function.flow.demo.train.param.Ticket;
+import org.salt.function.flow.node.FlowNodeWithReturn;
+import org.salt.function.flow.node.register.NodeIdentity;
 
-public interface IFlowNode {
-    String nodeId();
-    void process(IContextBus iContextBus);
-    default <T, R> void rollback(IContextBus<T, R> iContextBus) {}
+@NodeIdentity(nodeId = "ticket_result")
+public class TrainTicketResult extends FlowNodeWithReturn<Ticket> {
+    @Override
+    public Ticket doProcess(IContextBus iContextBus) {
+        int price = (int) iContextBus.getPreResult();
+        System.out.println("Issue ticket result, price " + price);
+        return Ticket.builder().result(true).price(price).build();
+    }
 }

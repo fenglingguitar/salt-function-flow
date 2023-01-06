@@ -21,12 +21,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.salt.function.flow.Info;
 import org.salt.function.flow.node.IFlowNode;
 import org.salt.function.flow.thread.TheadHelper;
-import org.salt.function.flow.util.FlowUtil;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.Function;
 
@@ -79,7 +75,7 @@ public class ContextBus<T, R> implements IContextBus<T, R> {
     /**
      * Flow stop flag
      */
-    private boolean stopFlag;
+    private volatile boolean stopFlag;
 
     /**
      * Flow rollback flag
@@ -88,7 +84,7 @@ public class ContextBus<T, R> implements IContextBus<T, R> {
     /**
      * Executed node list
      */
-    private ArrayList<IFlowNode> execList;
+    private Deque<IFlowNode> rollbackList;
 
     /**
      * Thread delivery cache
@@ -143,6 +139,10 @@ public class ContextBus<T, R> implements IContextBus<T, R> {
 
     public <P> void putPassResult(String nodeId, P result) {
         passResultMap.put(nodeId, result);
+    }
+
+    public <P> void removePassResult(String nodeId) {
+        passResultMap.remove(nodeId);
     }
 
     public static void putLastNodeId(String nodeId) {
@@ -201,7 +201,22 @@ public class ContextBus<T, R> implements IContextBus<T, R> {
                 .transmitMap(transmitMap)
                 .flowId(processId)
                 .runtimeId(runtimeId)
-                .execList(execList)
+                .rollbackList(rollbackList)
+                .functionMap(functionMap)
+                .build();
+        return contextBus;
+    }
+
+    public ContextBus<T, R> copyNotify(String processId) {
+        ContextBus<T, R> contextBus = ContextBus.<T, R>builder()
+                .param(param)
+                .conditionMap(conditionMap)
+                .passResultMap(passResultMap)
+                .passExceptionMap(passExceptionMap)
+                .transmitMap(transmitMap)
+                .flowId(processId)
+                .runtimeId(runtimeId)
+                .rollbackList(new LinkedList<>())
                 .functionMap(functionMap)
                 .build();
         return contextBus;
@@ -222,6 +237,7 @@ public class ContextBus<T, R> implements IContextBus<T, R> {
                     conditionTmp.put("param", param);
                 } else {
                     conditionTmp = BeanUtils.describe(param);
+                    conditionTmp.entrySet().removeIf(entry -> Objects.isNull(entry.getValue()));
                 }
             } catch (Exception e) {
                 throw new RuntimeException("param to conditionMap error");
@@ -235,7 +251,7 @@ public class ContextBus<T, R> implements IContextBus<T, R> {
                 .transmitMap(new ConcurrentHashMap<>())
                 .flowId(flowId)
                 .runtimeId(UUID.randomUUID().toString().replaceAll("-", ""))
-                .execList(new ArrayList<>())
+                .rollbackList(new LinkedList<>())
                 .functionMap(new ConcurrentHashMap<>())
                 .build();
         contextBus.putPassResult(flowId, param);
@@ -254,21 +270,21 @@ public class ContextBus<T, R> implements IContextBus<T, R> {
     public synchronized void rollbackProcess() {
         this.rollbackFlag = true;
     }
-    public synchronized boolean roolbackExecList(IFlowNode iFlowNode) {
-        if (rollbackFlag) {
-            for(int i=execList.size()-1; i>=0; i--) {
-                IFlowNode execNode = execList.get(i);
-                try {
-                    execNode.rollback(this);
-                } catch (Exception e) {
-                }
+
+    public synchronized boolean isRollbackProcess() {
+        return this.rollbackFlag;
+    }
+
+    public synchronized void roolbackAll() {
+        for(int i=rollbackList.size()-1; i>=0; i--) {
+            IFlowNode execNode = rollbackList.pop();
+            try {
+                execNode.rollback(this);
+            } catch (Exception e) {
             }
-            return true;
-        } else {
-            execList.add(iFlowNode);
-            return false;
         }
     }
+
     public synchronized boolean roolbackExec(IFlowNode iFlowNode) {
         if (rollbackFlag) {
             try {
@@ -277,19 +293,12 @@ public class ContextBus<T, R> implements IContextBus<T, R> {
             }
             return true;
         } else {
-            execList.add(iFlowNode);
+            rollbackList.push(iFlowNode);
             return false;
         }
     }
 
     public static Info getNodeInfo(String key) {
         return TheadHelper.getThreadLocal(key);
-    }
-
-    public static void setNodeInfo(Info info) {
-        TheadHelper.putThreadLocal(FlowUtil.getNodeInfoKey(info.id) , info);
-    }
-    public static void cleanNodeInfo(Info info) {
-        TheadHelper.putThreadLocal(FlowUtil.getNodeInfoKey(info.id), null);
     }
 }
