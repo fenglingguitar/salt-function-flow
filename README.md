@@ -154,7 +154,7 @@ private static class AddResult implements IResult<Integer> {
 ```
 #### Parallel form II
 Asynchronous execution of demo_reduce、 demo_multiply nodes, and add the results.
-![image](https://github.com/Jindou2018/image/raw/master/flow-image/WX20230109-134857%402x.png)
+![image](https://github.com/Jindou2018/image/raw/master/flow-image/WX20230109-135120%402x.png)
 ```
 flowEngine.builder().id("demo_flow_future")
                 .next("demo_add")
@@ -164,7 +164,7 @@ flowEngine.builder().id("demo_flow_future")
                 .build();
 ```
 Asynchronous execution of demo_reduce node, and execute the demo synchronously demo_multiply, and add the results.
-![image](https://github.com/Jindou2018/image/raw/master/flow-image/WX20230109-135120%402x.png)
+![image](https://github.com/Jindou2018/image/raw/master/flow-image/WX20230109-134857%402x.png)
 ```
 flowEngine.builder().id("demo_flow_future_1")
                 .next("demo_add")
