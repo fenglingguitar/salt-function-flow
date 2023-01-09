@@ -6,6 +6,8 @@ The Salt Function Flow is a lightweight flow orchestration component at the memo
 
 Including flow node implementation, flow orchestration and flow execution
 
+![image](https://github.com/Jindou2018/image/raw/master/flow-image/WX20230109-113715%402x.png)
+
 ### Maven
 
 ```
