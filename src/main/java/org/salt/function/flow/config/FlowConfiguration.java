@@ -21,8 +21,8 @@ import org.salt.function.flow.node.register.FlowNodeScanner;
 import org.salt.function.flow.thread.IThreadContent;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -31,7 +31,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 
 @Slf4j
 @Configuration
-@ConditionalOnBean(value = IFlowInit.class)
+@ConditionalOnProperty(value = "salt.function.flow.enable", havingValue = "true", matchIfMissing = true)
 public class FlowConfiguration {
 
     @Value("${salt.function.flow.threadpool.coreSize:100}")
