@@ -123,8 +123,8 @@ Execute the demo according to the incoming conditions demo_reduce or demo_multip
 flowEngine.builder().id("demo_flow_exclusive")
                 .next("demo_add")
                 .next(
-                        Info.builder().include("param <= 30").id("demo_reduce").build(),
-                        Info.builder().include("param > 30").id("demo_multiply").build()
+                        Info.builder().include("param <= 40").id("demo_reduce").build(),
+                        Info.builder().include("param > 40").id("demo_multiply").build()
                 )
                 .result("demo_division").build();
 ```
