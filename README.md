@@ -14,7 +14,7 @@ Including flow node implementation, flow orchestration and flow execution.
 <dependency>
     <groupId>cn.fenglingsoftware</groupId>
     <artifactId>salt-function-flow</artifactId>
-    <version>1.0.1</version>
+    <version>1.0.2</version>
 </dependency>
 ```
 
